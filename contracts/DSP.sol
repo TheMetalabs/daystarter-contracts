@@ -13,8 +13,8 @@ contract DSP is ERC20Burnable, AccessControl {
         _setupRole(MINTER_ROLE, _msgSender());
     }
 
-    function mint(uint256 balance) public {
+    function mint(address targetAddr, uint256 balance) public {
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
-        _mint(msg.sender, balance);
+        _mint(targetAddr, balance);
     }
 }
