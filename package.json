@@ -7,7 +7,8 @@
   "license": "MIT",
   "scripts": {
     "remix": "remixd -s ./ -u https://remix.ethereum.org",
-    "test": "truffle test"
+    "test": "truffle test",
+    "migrate": "truffle migrate"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^4.7.2"
@@ -15,6 +16,6 @@
   "devDependencies": {
     "@remix-project/remixd": "^0.6.5",
     "solhint": "^3.3.7",
-    "truffle": "^5.5.26"
+    "truffle": "^5.5.27"
   }
 }
