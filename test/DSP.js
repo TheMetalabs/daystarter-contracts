@@ -8,7 +8,7 @@ contract("DSP", async (accounts) => {
     assert.equal(balance.valueOf(), 0, "0 wasn't in the first account");
   });
 
-  it("mint 100 DSP", async () => {
+  it("mint 100 DSP (need 100 DSP)", async () => {
     const DSPInstance = await DSP.deployed();
     await DSPInstance.mint(accounts[0], 100, { from: accounts[0] });
     const balance = await DSPInstance.balanceOf.call(accounts[0]);
@@ -16,7 +16,7 @@ contract("DSP", async (accounts) => {
     assert.equal(balance.valueOf(), 100, "100 wasn't in the first account");
   });
 
-  it("mint 100 DSP", async () => {
+  it("mint 100 DSP again (need 200 DSP)", async () => {
     const DSPInstance = await DSP.deployed();
     await DSPInstance.mint(accounts[0], 100, { from: accounts[0] });
     const balance = await DSPInstance.balanceOf.call(accounts[0]);
