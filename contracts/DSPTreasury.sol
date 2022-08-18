@@ -12,7 +12,7 @@ interface Token {
     function transferFrom(address sender, address recipient, uint256 amount) external returns (bool result);
 }
 
-contract DSTTreasury is AccessControl {
+contract DSPTreasury is AccessControl {
     event DepositEvent(address tokenAddr, uint256 balance); // 입금 이벤트
     event WithdrawEvent(address tokenAddr, uint256 balance); // 출금 이벤트
 
