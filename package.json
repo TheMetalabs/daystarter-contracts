@@ -1,0 +1,20 @@
+{
+  "name": "daystarter-contracts",
+  "version": "1.0.0",
+  "description": "daystartter contracts",
+  "repository": "https://github.com/TheMetalabs/daystarter-contracts",
+  "author": "METALABS",
+  "license": "MIT",
+  "scripts": {
+    "remix": "remixd -s ./ -u https://remix.ethereum.org",
+    "test": "truffle test"
+  },
+  "dependencies": {
+    "@openzeppelin/contracts": "^4.7.2"
+  },
+  "devDependencies": {
+    "@remix-project/remixd": "^0.6.5",
+    "solhint": "^3.3.7",
+    "truffle": "^5.5.26"
+  }
+}
