@@ -9,6 +9,7 @@ contract("Membership", async (accounts) => {
   const owner = accounts[0];
   const minter = accounts[1];
   const burner = accounts[2];
+  const noPermissioner = accounts[3];
 
   beforeEach(async () => {
     membershipInstance = await Membership.deployed();
@@ -18,50 +19,115 @@ contract("Membership", async (accounts) => {
   describe("mint", () => {
     beforeEach(async () => {
       await membershipInstance.grantRole(minterRole, minter, { from: owner });
+      await membershipInstance.grantRole(bunnerRole, burner, { from: owner });
     });
 
-    it("is not allowed for non minters", async () => {
+    it("is not allowed for nont minters", async () => {
       const id = 0;
       let error = false;
 
       try {
-        await membershipInstance.mint(owner, id, 1, Buffer.from("data"), { from: owner });
+        await membershipInstance.mint(owner, id, Buffer.from(""), { from: owner });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+
+      error = false;
+
+      try {
+        await membershipInstance.mint(owner, id, Buffer.from(""), { from: burner });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+
+      error = false;
+
+      try {
+        await membershipInstance.mint(owner, id, Buffer.from(""), { from: noPermissioner });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+
+    });
+
+    it("is allowed for minter", async () => {
+      const id = 0;
+      let error = false;
+      await membershipInstance.grantRole(minterRole, minter, { from: owner });
+      try {
+        await membershipInstance.mint(owner, id, Buffer.from(""), { from: minter });
+      } catch (e) {
+        error = true;
+      }
+
+      const _owner = await membershipInstance.ownerOf(id);
+      assert.equal(owner, _owner);
+      assert.equal(error, false);
+    });
+  });
+
+  describe("setURI", () => {
+    beforeEach(async () => {
+      await membershipInstance.grantRole(minterRole, minter, { from: owner });
+      await membershipInstance.grantRole(bunnerRole, burner, { from: owner });
+    });
+
+    it("is not allowed for non-owner", async () => {
+      let error = false;
+      try {
+        await membershipInstance.setURI("https://opensea.io", { from: minter });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+
+      error = false;
+      try {
+        await membershipInstance.setURI("https://opensea.io", { from: burner });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+
+      error = false;
+      try {
+        await membershipInstance.setURI("https://opensea.io", { from: noPermissioner });
       } catch (e) {
         error = true;
       }
       assert.equal(error, true);
     });
 
-    it("is allowed for minters", async () => {
-      const id = 0;
+    it("is allowed for owner", async () => {
       let error = false;
-
-      await membershipInstance.grantRole(minterRole, minter, { from: owner });
-      const prev = await membershipInstance.balanceOf(owner, id);
-
       try {
-        await membershipInstance.mint(owner, id, 1, Buffer.from("data"), { from: minter });
+        await membershipInstance.setURI("https://opensea.io", { from: owner });
       } catch (e) {
         error = true;
       }
-
-      const current = await membershipInstance.balanceOf(owner, id);
       assert.equal(error, false);
-      assert.equal(prev.toNumber() + 1, current.toNumber());
+    });
+  });
+
+  describe("tokenURI", () => {
+    beforeEach(async () => {
+      await membershipInstance.setURI("", { from: owner });
     });
 
+    it("return empty string when no URI is setted", async () => {
+      const id = 0;
+      const tokenURI = await membershipInstance.tokenURI(id, { from: noPermissioner });
+      assert.equal(tokenURI, "");
+    });
 
-    it ("only supports id ranges[0..3]", async () => {
-      let error = false;
-      for (let id = -1; id < 5; id++) {
-        error = false;
-        try {
-          await membershipInstance.mint(owner, id, 1, Buffer.from("data"), { from: minter });
-        } catch (e) {
-          error = true;
-        }
-        assert.equal(error, id < 0 || id > 3);
-      }
+    it("return URL with json extension when URI is setted", async () => {
+      const id = 0;
+      await membershipInstance.setURI("https://opensea.io", { from: owner });
+      const tokenURI = await membershipInstance.tokenURI(id, { from: noPermissioner });
+      assert.equal(tokenURI, `https://opensea.io/${id}.json`);
     });
   });
 });
