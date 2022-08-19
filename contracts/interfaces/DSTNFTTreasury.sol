@@ -6,7 +6,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract DSTNFTTreasury is AccessControl {
+abstract contract DSTNFTTreasury is AccessControl {
     event DepositEvent(address nftAddr, uint256 nftId); // 입금 이벤트
     event WithdrawEvent(address nftAddr, uint256 nftId); // 출금 이벤트
 
@@ -14,13 +14,21 @@ contract DSTNFTTreasury is AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public nftAddr;
 
-    constructor() {
+    // Contract name
+    string private _name;
+
+    // Token symbol
+    string private _symbol;
+
+    constructor(string memory name_, string memory symbol_) {
         _setupRole(DEFAULT_ADMIN_ROLE, _msgSender());
         _setupRole(MINTER_ROLE, _msgSender());
+        _name = name_;
+        _symbol = symbol_;
     }
 
-    function setAddress(address addr) public onlyRole(MINTER_ROLE)
-        require(IERC721(addr).supportsInterface(0x80ac58cd), "Only ERC721 is supported");{
+    function setAddress(address addr) public onlyRole(MINTER_ROLE) {
+        require(IERC721(addr).supportsInterface(0x80ac58cd), "Only ERC721 is supported");
         nftAddr = addr;
     }
 
@@ -36,6 +44,7 @@ contract DSTNFTTreasury is AccessControl {
     }
 
     function withdraw(address targetAddr, uint256 nftId) public onlyRole(MINTER_ROLE) {
+        require(targetAddr != address(0), "wrong address");
         require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
 
         // 토큰 전송 : 트레저리 컨트랙트 -> 타겟 어드레스

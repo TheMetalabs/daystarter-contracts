@@ -2,9 +2,23 @@ const DST = artifacts.require("DST");
 const DSTTreasury = artifacts.require("DSTTreasury");
 
 contract("DSTTreasury", async (accounts) => {
-  it("should put 1,000,000,000 DST in the first account", async () => {
+  let dstTreasuryInstance;
+  let dstInstance;
+  const minter = accounts[0];
+  const dstHolder = accounts[1];
+  const dstReceiver = accounts[2];
+
+  before(async () => {
+    dstTreasuryInstance = await DSTTreasury.deployed();
+    dstInstance = await DST.deployed();
+    await dstTreasuryInstance.setTokenAddress(dstInstance.address, {
+      from: minter,
+    });
+  });
+
+  it("put 1,000,000,000 DST in the first account", async () => {
     const DSTInstance = await DST.deployed();
-    const balance = await DSTInstance.balanceOf.call(accounts[0]);
+    const balance = await DSTInstance.balanceOf.call(minter);
 
     assert.equal(
       balance.valueOf(),
@@ -13,98 +27,119 @@ contract("DSTTreasury", async (accounts) => {
     );
   });
 
-  it("send 1,000 DST to the second account", async () => {
-    const DSTInstance = await DST.deployed();
-
-    await DSTInstance.transfer(accounts[1], 1000, {
-      from: accounts[0],
-    });
-
-    const balance = await DSTInstance.balanceOf.call(accounts[1]);
-
-    assert.equal(balance.valueOf(), 1000, "1,000 wasn't in the second account");
-  });
-
   it("0 DST in treasury", async () => {
-    const DSTInstance = await DST.deployed();
-    const DSTTreasuryInstance = await DSTTreasury.deployed();
-    const balance = await DSTInstance.balanceOf.call(
-      DSTTreasuryInstance.address
-    );
-
-    await DSTTreasuryInstance.setTokenAddress(DSTInstance.address, {
-      from: accounts[0],
-    });
-
+    const balance = await dstInstance.balanceOf(dstTreasuryInstance.address);
     assert.equal(balance.valueOf(), 0, "0 wasn't in the treasury");
   });
 
-  it("deposit 100 DST (need treasury balance 100)", async () => {
-    const DSTInstance = await DST.deployed();
-    const DSTTreasuryInstance = await DSTTreasury.deployed();
-
-    await DSTInstance.approve(DSTTreasuryInstance.address, 100, {
-      from: accounts[1],
+  describe("deposit", () => {
+    before(async () => {
+      await dstInstance.mint(dstHolder, 200, { from: minter });
     });
-    await DSTTreasuryInstance.deposit(100, {
-      from: accounts[1],
-    });
-    const balance = await DSTInstance.balanceOf.call(
-      DSTTreasuryInstance.address
-    );
 
-    assert.equal(balance.valueOf(), 100, "100 wasn't in the treasury");
+    it("is not allowed for non holder", async () => {
+      let error = false;
+      try {
+        await dstTreasuryInstance.deposit(10, { from: minter });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+    });
+
+    it("is allowed for holder", async () => {
+      let error = false;
+      const amount = 10;
+      try {
+        await dstInstance.approve(dstTreasuryInstance.address, amount, { from: dstHolder });
+        await dstTreasuryInstance.deposit(amount, { from: dstHolder });
+      } catch (e) {
+        console.error(e);
+        error = true;
+      }
+      assert.equal(error, false);
+    });
+
+    it("increase treasury balance", async () => {
+      const amount = 20;
+      const prevBalance = await dstInstance.balanceOf(dstTreasuryInstance.address);
+
+      await dstInstance.approve(dstTreasuryInstance.address, amount, { from: dstHolder });
+      await dstTreasuryInstance.deposit(amount, { from: dstHolder });
+
+      const balance = await dstInstance.balanceOf.call(dstTreasuryInstance.address);
+      assert.equal(balance.toNumber(0), prevBalance.toNumber() + amount);
+    });
+
+    it("decrease user balance", async () => {
+      const amount = 20;
+      const prevBalance = await dstInstance.balanceOf.call(dstHolder);
+
+      await dstInstance.approve(dstTreasuryInstance.address, amount, { from: dstHolder });
+      await dstTreasuryInstance.deposit(amount, { from: dstHolder });
+
+      const balance = await dstInstance.balanceOf.call(dstHolder);
+      assert.equal(balance.toNumber(), prevBalance.toNumber() - amount);
+    });
+
+    it("fail when deposit amount is greater then user balance", async () => {
+      const prevBalance = await dstInstance.balanceOf(dstHolder);
+      const amount = prevBalance.toNumber() + 1;
+      let error = false;
+      try {
+        await dstInstance.approve(dstTreasuryInstance.address, amount, { from: dstHolder });
+        await dstTreasuryInstance.deposit(amount, { from: dstHolder });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
+    });
   });
 
-  it("need user balance 900 DST", async () => {
-    const DSTInstance = await DST.deployed();
-    const balance = await DSTInstance.balanceOf.call(accounts[1]);
-
-    assert.equal(balance.valueOf(), 900, "900 wasn't in the user");
-  });
-
-  it("deposit 100 DST (need treasury balance 200)", async () => {
-    const DSTInstance = await DST.deployed();
-    const DSTTreasuryInstance = await DSTTreasury.deployed();
-
-    await DSTInstance.approve(DSTTreasuryInstance.address, 100, {
-      from: accounts[1],
+  describe("withdraw", () => {
+    before(async () => {
+      await dstInstance.mint(dstTreasuryInstance.address, 200, { from: minter });
     });
-    await DSTTreasuryInstance.deposit(100, {
-      from: accounts[1],
+
+    it("is not allowed for non holder", async () => {
+      let error = false;
+      try {
+        await dstTreasuryInstance.withdraw(dstReceiver, 10, { from: dstReceiver });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, true);
     });
-    const balance = await DSTInstance.balanceOf.call(
-      DSTTreasuryInstance.address
-    );
 
-    assert.equal(balance.valueOf(), 200, "200 wasn't in the treasury");
-  });
-
-  it("need user balance 800 DST", async () => {
-    const DSTInstance = await DST.deployed();
-    const balance = await DSTInstance.balanceOf.call(accounts[1]);
-
-    assert.equal(balance.valueOf(), 800, "800 wasn't in the user");
-  });
-
-  it("withdraw 100 DST (need treasury balance 100)", async () => {
-    const DSTInstance = await DST.deployed();
-    const DSTTreasuryInstance = await DSTTreasury.deployed();
-
-    await DSTTreasuryInstance.withdraw(accounts[1], 100, {
-      from: accounts[0],
+    it("is allowed for minter", async () => {
+      let error = false;
+      try {
+        await dstTreasuryInstance.withdraw(dstReceiver, 10, { from: minter });
+      } catch (e) {
+        error = true;
+      }
+      assert.equal(error, false);
     });
-    const balance = await DSTInstance.balanceOf.call(
-      DSTTreasuryInstance.address
-    );
 
-    assert.equal(balance.valueOf(), 100, "100 wasn't in the treasury");
-  });
+    it("decrease treasury balance", async () => {
+      const amount = 20;
+      const prevBalance = await dstInstance.balanceOf.call(dstTreasuryInstance.address);
 
-  it("need user balance 900 DST", async () => {
-    const DSTInstance = await DST.deployed();
-    const balance = await DSTInstance.balanceOf.call(accounts[1]);
+      await dstTreasuryInstance.withdraw(dstReceiver, amount, { from: minter });
 
-    assert.equal(balance.valueOf(), 900, "900 wasn't in the user");
+      const balance = await dstInstance.balanceOf.call(dstTreasuryInstance.address);
+      assert.equal(balance.toNumber(), prevBalance.toNumber() - amount);
+    });
+
+    it("increase user balance", async () => {
+      const amount = 20;
+      const prevBalance = await dstInstance.balanceOf.call(dstReceiver);
+
+      await dstTreasuryInstance.withdraw(dstReceiver, amount, { from: minter });
+
+      const balance = await dstInstance.balanceOf.call(dstReceiver);
+      assert.equal(balance.toNumber(), prevBalance.toNumber() + amount);
+    });
   });
 });
+

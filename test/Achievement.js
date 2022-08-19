@@ -23,15 +23,6 @@ contract("Achievement", async (accounts) => {
     });
 
     it("is not allowed for nont minters", async () => {
-      let error = false;
-      try {
-        await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: owner });
-        nftId++;
-      } catch (e) {
-        error = true;
-      }
-      assert.equal(error, true);
-
       error = false;
       try {
         await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: noPermissioner });

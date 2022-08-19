@@ -25,16 +25,6 @@ contract("Membership", async (accounts) => {
     it("is not allowed for nont minters", async () => {
       const id = 0;
       let error = false;
-
-      try {
-        await membershipInstance.mint(owner, id, Buffer.from(""), { from: owner });
-      } catch (e) {
-        error = true;
-      }
-      assert.equal(error, true);
-
-      error = false;
-
       try {
         await membershipInstance.mint(owner, id, Buffer.from(""), { from: burner });
       } catch (e) {
@@ -43,14 +33,12 @@ contract("Membership", async (accounts) => {
       assert.equal(error, true);
 
       error = false;
-
       try {
         await membershipInstance.mint(owner, id, Buffer.from(""), { from: noPermissioner });
       } catch (e) {
         error = true;
       }
       assert.equal(error, true);
-
     });
 
     it("is allowed for minter", async () => {
