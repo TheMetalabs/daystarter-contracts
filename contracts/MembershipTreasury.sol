@@ -15,6 +15,7 @@ contract MembershipTreasury is AccessControl {
     event DepositEvent(address nftAddr, uint256 nftId); // 입금 이벤트
     event WithdrawEvent(address nftAddr, uint256 nftId); // 출금 이벤트
 
+    // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     address public nftAddr;
 
@@ -32,7 +33,7 @@ contract MembershipTreasury is AccessControl {
         // 컨트랙트 호출자의 토큰 잔량 체크
         require(NFT(nftAddr).ownerOf(nftId) == msg.sender, "can't deposit"); // 해당 NFT의 주인만 컨트랙트 실행 가능
         require(NFT(nftAddr).getApproved(nftId) == address(this), "need approve"); // 승인 체크
-        
+
         // 토큰 전송 : 컨트랙트 호출자 -> 트레저리 컨트랙트
         NFT(nftAddr).transferFrom(msg.sender, address(this), nftId);
 
