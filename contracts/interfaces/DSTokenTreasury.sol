@@ -6,6 +6,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "hardhat/console.sol";
+import "@openzeppelin/contracts/utils/Strings.sol";
 
 abstract contract DSTokenTreasury is AccessControl {
     event DepositEvent(address sender, uint256 balance, string symbol); // 입금 이벤트
