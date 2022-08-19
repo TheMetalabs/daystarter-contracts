@@ -6,15 +6,17 @@ import "@openzeppelin/contracts/token/ERC721/ERC721.sol";
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 
-contract Achievement is ERC721, AccessControl {
+contract DS721 is ERC721, AccessControl {
   // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
   string private _uri = "";
+  bool private _transferable = true;
 
-  constructor() ERC721("DAYSTARTER Achievement", "DSTACH") {
+  constructor(string memory name_, string memory symbol_, bool transferable_) ERC721(name_, symbol_) {
     _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MINTER_ROLE, msg.sender);
+    _transferable = transferable_;
   }
 
   function supportsInterface(bytes4 interfaceId) public view override(ERC721, AccessControl) returns (bool) {
@@ -51,7 +53,11 @@ contract Achievement is ERC721, AccessControl {
     address from,
     address to,
     uint256 tokenId
-  ) internal override pure {
-    revert("Achievement is not trasferable");
+  ) internal override {
+    if(_transferable) {
+        super._transfer(from, to, tokenId);
+    } else {
+        revert("Not trasferable");
+    }   
   }
 }
