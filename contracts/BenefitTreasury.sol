@@ -6,7 +6,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract MembershipTreasury is AccessControl {
+contract BenefitTreasury is AccessControl {
     event DepositEvent(address nftAddr, uint256 nftId); // 입금 이벤트
     event WithdrawEvent(address nftAddr, uint256 nftId); // 출금 이벤트
 

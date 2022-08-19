@@ -6,7 +6,8 @@ const Membership = artifacts.require("Membership");
 const Benefit = artifacts.require("Benefit");
 const MembershipTreasury = artifacts.require("MembershipTreasury");
 const Achievement = artifacts.require("Achievement");
-const BenefixTreasury = artifacts.require("BenefixTreasury");
+const BenefitTreasury = artifacts.require("BenefitTreasury");
+const DSTNFTreasury = artifacts.require("DSTNFTreasury");
 
 module.exports = function (deployer) {
   deployer.deploy(DSP);
@@ -17,5 +18,6 @@ module.exports = function (deployer) {
   deployer.deploy(Benefit);
   deployer.deploy(MembershipTreasury);
   deployer.deploy(Achievement);
-  deployer.deploy(BenefixTreasury);
+  deployer.deploy(BenefitTreasury);
+  deployer.deploy(DSTNFTreasury);
 };
