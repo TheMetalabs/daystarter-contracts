@@ -6,7 +6,7 @@ pragma solidity ^0.8.2;
 import "@openzeppelin/contracts/access/AccessControl.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract MembershipTreasury is AccessControl {
+contract BenefitTreasury is AccessControl {
     event DepositEvent(address nftAddr, uint256 nftId); // 입금 이벤트
     event WithdrawEvent(address nftAddr, uint256 nftId); // 출금 이벤트
 
@@ -19,8 +19,8 @@ contract MembershipTreasury is AccessControl {
         _setupRole(MINTER_ROLE, _msgSender());
     }
 
-    function setAddress(address addr) public onlyRole(MINTER_ROLE)
-        require(IERC721(addr).supportsInterface(0x80ac58cd), "Only ERC721 is supported");{
+    function setAddress(address addr) public onlyRole(MINTER_ROLE) {
+        require(IERC721(addr).supportsInterface(0x80ac58cd), "Only ERC721 is supported");
         nftAddr = addr;
     }
 
@@ -36,7 +36,7 @@ contract MembershipTreasury is AccessControl {
     }
 
     function withdraw(address targetAddr, uint256 nftId) public onlyRole(MINTER_ROLE) {
-        require(hasRole(MINTER_ROLE, msg.sender), "Caller is not a minter");
+        require(IERC721(nftAddr).ownerOf(nftId) == address(this), "Not in contract"); // 트레저리가 해당 NFT를 소유하고 있을때 실행 가능
 
         // 토큰 전송 : 트레저리 컨트랙트 -> 타겟 어드레스
         IERC721(nftAddr).transferFrom(address(this), targetAddr, nftId);
