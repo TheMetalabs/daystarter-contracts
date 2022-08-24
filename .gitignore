@@ -1,0 +1,5 @@
+.deps
+node_modules
+contracts/artifacts
+build
+contracts/interfaces/artifacts/build-info
