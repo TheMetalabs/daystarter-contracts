@@ -92,6 +92,8 @@ contract Vesting is Ownable {
   }
 
   function setDSTAddress(address addr) public onlyOwner {
+    // Check addr is ERC20
+    IERC20(addr).balanceOf(msg.sender);
     dstAddress = addr;
   }
 
@@ -111,6 +113,7 @@ contract Vesting is Ownable {
   }
 
   function add(uint8 vestingType, uint256 balance, address addr) public onlyOwner {
+    require(dstAddress != address(0), "no dst address");
     // Check vesting type
     require(vestingType >= uint8(VestingType.PRIVATE_SALE) && vestingType <= uint8(VestingType.TREASURY), "wrong vesting type");
 
@@ -158,9 +161,8 @@ contract Vesting is Ownable {
     // Check claimable balance
     uint256 balance = getClaimableBalance(msg.sender);
     require(balance > 0, "no balance");
-
-    // Transfer DST: Contract -> Contract caller
-    IERC20(dstAddress).transfer(msg.sender, balance);
+    require(vestingInfo.claimedBalance + balance <= vestingInfo.totalBalance, "over total balance");
+    require(vestingAccountInfos[msg.sender].claimedBalance + balance <= vestingAccountInfos[msg.sender].totalBalance, "over account total balance");
 
     // Update claimed balance of total vesting
     vestingInfo.claimedBalance += balance;
@@ -168,6 +170,9 @@ contract Vesting is Ownable {
     // Update claimed balance of account
     vestingAccountInfos[msg.sender].claimedBalance += balance;
     vestingAccountInfos[msg.sender].lastClaimedTime = block.timestamp;
+
+    // Transfer DST: Contract -> Contract caller
+    IERC20(dstAddress).transfer(msg.sender, balance);
 
     emit ClaimEvent(msg.sender, vestingAccountInfos[msg.sender].vestingType, balance);
   }
