@@ -185,7 +185,6 @@ contract Vesting is Ownable {
     return balance;
   }
 
-  // 테스트를 위해서 클레임 가능 토큰 계산 로직 분리
   function _getClaimableBalance(uint8 vestingType, uint256 totalBalance, uint256 claimedBalance, uint256 time) public view returns (uint256) {
     // Check vesting type
     require(vestingType >= uint8(VestingType.PRIVATE_SALE) && vestingType <= uint8(VestingType.TREASURY), "wrong vesting type");
