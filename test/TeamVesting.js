@@ -8,16 +8,16 @@ const Vesting = artifacts.require('Vesting');
 const DST = artifacts.require('DST');
 const monthInSeconds = 30 * 24 * 60 * 60;
 const decimal = BigNumber('1e18');
-const privateSaleType = 0;
+const teamType = 1;
 
-contract('PrivateSaleVesting', async (accounts) => {
+contract('TeamVesting', async (accounts) => {
   const owner = accounts[0];
-  const privateSaleVester = accounts[1];
+  const teamVester = accounts[1];
 
   describe('Total', () => {
-    const total = BigNumber('165000000').times(decimal);
-    const initialRelease = BigNumber('8250000').times(decimal);
-    const periodicRelease = BigNumber('6600000').times(decimal);
+    const total = BigNumber('80000000').times(decimal);
+    const initialRelease = BigNumber('0');
+    const periodicRelease = BigNumber('2240000').times(decimal);
 
     let vestingInstance;
     let dstInstance;
@@ -29,11 +29,11 @@ contract('PrivateSaleVesting', async (accounts) => {
       await vestingInstance.setDSTAddress(dstInstance.address);
 
       await dstInstance.approve(vestingInstance.address, total);
-      await vestingInstance.add(privateSaleType, total, owner);
+      await vestingInstance.add(teamType, total, owner);
       const block = await web3.eth.getBlock('latest');
       started = moment.unix(block.timestamp + monthInSeconds - 1);
       console.log(`Started: ${started.format('YYYY-MM-DD HH:mm:ss')}`);
-      await vestingInstance.setStartTime(privateSaleType, started.unix());
+      await vestingInstance.setStartTime(teamType, started.unix());
     });
 
     it('M+0', async () => {
@@ -46,8 +46,8 @@ contract('PrivateSaleVesting', async (accounts) => {
       assert.equal(initialRelease.toString(), balance.toString());
     });
 
-    it('Cliff: M+1 => M+5', async () => {
-      for (let i = 1; i <= 5; i++) {
+    it('Cliff: M+1 => M+11', async () => {
+      for (let i = 1; i <= 11; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
@@ -58,9 +58,9 @@ contract('PrivateSaleVesting', async (accounts) => {
       }
     });
 
-    it('Periodic: M+6 => M+28', async () => {
+    it('Periodic: M+12 => M+46', async () => {
       let release = BigNumber(initialRelease);
-      for (let i = 6; i <= 28; i++) {
+      for (let i = 12; i <= 46; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
@@ -72,31 +72,31 @@ contract('PrivateSaleVesting', async (accounts) => {
       }
     });
 
-    it('Last periodic: M+29', async () => {
+    it('Last periodic: M+47', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
       const balance = await vestingInstance.getClaimableBalance(owner);
 
-      console.log(`M+29: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+47: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.toString(), balance.toString());
     });
 
-    it('After periodic: M+30', async () => {
+    it('After periodic: M+48', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
       const balance = await vestingInstance.getClaimableBalance(owner);
 
-      console.log(`M+30: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+48: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.toString(), balance.toString());
     });
   });
 
   describe('Total with claim', () => {
-    const total = BigNumber('165000000').times(decimal);
-    const initialRelease = BigNumber('8250000').times(decimal);
-    const periodicRelease = BigNumber('6600000').times(decimal);
+    const total = BigNumber('80000000').times(decimal);
+    const initialRelease = BigNumber('0');
+    const periodicRelease = BigNumber('2240000').times(decimal);
 
     let vestingInstance;
     let dstInstance;
@@ -109,65 +109,53 @@ contract('PrivateSaleVesting', async (accounts) => {
       await vestingInstance.setDSTAddress(dstInstance.address);
 
       await dstInstance.approve(vestingInstance.address, total);
-      await vestingInstance.add(privateSaleType, total, privateSaleVester);
+      await vestingInstance.add(teamType, total, teamVester);
       const block = await web3.eth.getBlock('latest');
       started = moment.unix(block.timestamp + monthInSeconds - 1);
       console.log(`Started: ${started.format('YYYY-MM-DD HH:mm:ss')}`);
-      await vestingInstance.setStartTime(privateSaleType, started.unix());
+      await vestingInstance.setStartTime(teamType, started.unix());
     });
 
     it('M+0', async () => {
       let block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      let balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      let balance = await vestingInstance.getClaimableBalance(teamVester);
 
       console.log(`M+0: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(initialRelease.toString(), balance.toString());
-
-      await vestingInstance.claim({ from: privateSaleVester });
-      const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-      const dstBalance = await dstInstance.balanceOf(privateSaleVester);
-      claimed = claimed.plus(initialRelease);
-
-      block = await web3.eth.getBlock('latest');
-      assert.equal(initialRelease.toString(), dstBalance.toString());
-      assert.equal(vestingInfo.claimedBalance, initialRelease.toString());
-      assert.equal(vestingAccountInfo.claimedBalance, initialRelease.toString());
-      assert.equal(vestingAccountInfo.lastClaimedTime, block.timestamp);
     });
 
-    it('Cliff: M+1 => M+5', async () => {
-      for (let i = 1; i <= 5; i++) {
+    it('Cliff: M+1 => M+11', async () => {
+      for (let i = 1; i <= 11; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         assert.equal('0', balance.toString());
       }
     });
 
-    it('Periodic: M+6 => M+28', async () => {
-      for (let i = 6; i <= 28; i++) {
-        const _prevDstBalance = await dstInstance.balanceOf(privateSaleVester);
+    it('Periodic: M+12 => M+46', async () => {
+      for (let i = 12; i <= 46; i++) {
+        const _prevDstBalance = await dstInstance.balanceOf(teamVester);
         const prevDstBalance = BigNumber(_prevDstBalance.toString());
 
         let block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
 
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         assert.equal(periodicRelease.toString(), balance.toString());
 
-        await vestingInstance.claim({ from: privateSaleVester });
-        const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-        const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-        const dstBalance = await dstInstance.balanceOf(privateSaleVester);
+        await vestingInstance.claim({ from: teamVester });
+        const vestingInfo = await vestingInstance.getVestingInfo(teamType);
+        const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(teamVester);
+        const dstBalance = await dstInstance.balanceOf(teamVester);
         claimed = claimed.plus(periodicRelease);
 
         block = await web3.eth.getBlock('latest');
@@ -178,19 +166,19 @@ contract('PrivateSaleVesting', async (accounts) => {
       }
     });
 
-    it('Last periodic: M+29', async () => {
+    it('Last periodic: M+47', async () => {
       let block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+29: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+47: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.minus(claimed).toString(), balance.toString());
 
-      await vestingInstance.claim({ from: privateSaleVester });
-      const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-      const dstBalance = await dstInstance.balanceOf(privateSaleVester);
+      await vestingInstance.claim({ from: teamVester });
+      const vestingInfo = await vestingInstance.getVestingInfo(teamType);
+      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(teamVester);
+      const dstBalance = await dstInstance.balanceOf(teamVester);
       claimed = claimed.plus(balance);
 
       block = await web3.eth.getBlock('latest');
@@ -200,18 +188,18 @@ contract('PrivateSaleVesting', async (accounts) => {
       assert.equal(vestingAccountInfo.lastClaimedTime, block.timestamp);
     });
 
-    it('After periodic: M+30', async () => {
+    it('After periodic: M+48', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+30: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+48: +${diff} days, Released: ${balance.toString()}`);
       assert.equal('0', balance.toString());
 
       let error = false;
       try {
-        await vestingInstance.claim({ from: privateSaleVester });
+        await vestingInstance.claim({ from: teamVester });
       } catch (e) {
         error = true;
       }
@@ -222,8 +210,8 @@ contract('PrivateSaleVesting', async (accounts) => {
 
   describe('Indivisual', () => {
     const total = BigNumber('1000').times(decimal);
-    const initialRelease = BigNumber(total).times(0.05);
-    const periodicRelease = BigNumber(total).times(0.04);
+    const initialRelease = BigNumber(0);
+    const periodicRelease = BigNumber(total).times(0.028);
 
     let vestingInstance;
     let dstInstance;
@@ -235,43 +223,43 @@ contract('PrivateSaleVesting', async (accounts) => {
       await vestingInstance.setDSTAddress(dstInstance.address);
 
       await dstInstance.approve(vestingInstance.address, total);
-      await vestingInstance.add(privateSaleType, total, privateSaleVester);
+      await vestingInstance.add(teamType, total, teamVester);
       const block = await web3.eth.getBlock('latest');
 
       started = moment.unix(block.timestamp + monthInSeconds - 1);
       console.log(`Started: ${started.format('YYYY-MM-DD HH:mm:ss')}`);
-      await vestingInstance.setStartTime(privateSaleType, started.unix());
+      await vestingInstance.setStartTime(teamType, started.unix());
     });
 
     it('M+0', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      let balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      let balance = await vestingInstance.getClaimableBalance(teamVester);
 
       console.log(`M+0: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(initialRelease.toString(), balance.toString());
     });
 
-    it('Cliff: M+1 => M+5', async () => {
-      for (let i = 1; i <= 5; i++) {
+    it('Cliff: M+1 => M+11', async () => {
+      for (let i = 1; i <= 11; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         assert.equal(initialRelease.toString(), balance.toString());
       }
     });
 
-    it('Periodic: M+6 => M+28', async () => {
+    it('Periodic: M+12 => M+46', async () => {
       let release = BigNumber(initialRelease);
-      for (let i = 6; i <= 28; i++) {
+      for (let i = 12; i <= 46; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         release = release.plus(periodicRelease);
@@ -279,31 +267,31 @@ contract('PrivateSaleVesting', async (accounts) => {
       }
     });
 
-    it('Last periodic: M+29', async () => {
+    it('Last periodic: M+47', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+29: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+47: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.toString(), balance.toString());
     });
 
-    it('After periodic: M+30', async () => {
+    it('After periodic: M+48', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+30: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+48: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.toString(), balance.toString());
     });
   });
 
   describe('Indivisual with claim', () => {
     const total = BigNumber('1000').times(decimal);
-    const initialRelease = BigNumber(total).times(0.05);
-    const periodicRelease = BigNumber(total).times(0.04);
+    const initialRelease = BigNumber('0');
+    const periodicRelease = BigNumber(total).times(0.028);
 
     let vestingInstance;
     let dstInstance;
@@ -316,65 +304,53 @@ contract('PrivateSaleVesting', async (accounts) => {
       await vestingInstance.setDSTAddress(dstInstance.address);
 
       await dstInstance.approve(vestingInstance.address, total);
-      await vestingInstance.add(privateSaleType, total, privateSaleVester);
+      await vestingInstance.add(teamType, total, teamVester);
       const block = await web3.eth.getBlock('latest');
       started = moment.unix(block.timestamp + monthInSeconds - 1);
       console.log(`Started: ${started.format('YYYY-MM-DD HH:mm:ss')}`);
-      await vestingInstance.setStartTime(privateSaleType, started.unix());
+      await vestingInstance.setStartTime(teamType, started.unix());
     });
 
     it('M+0', async () => {
       let block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      let balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      let balance = await vestingInstance.getClaimableBalance(teamVester);
 
       console.log(`M+0: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(initialRelease.toString(), balance.toString());
-
-      await vestingInstance.claim({ from: privateSaleVester });
-      const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-      const dstBalance = await dstInstance.balanceOf(privateSaleVester);
-      claimed = claimed.plus(initialRelease);
-
-      block = await web3.eth.getBlock('latest');
-      assert.equal(initialRelease.toString(), dstBalance.toString());
-      assert.equal(vestingInfo.claimedBalance, initialRelease.toString());
-      assert.equal(vestingAccountInfo.claimedBalance, initialRelease.toString());
-      assert.equal(vestingAccountInfo.lastClaimedTime, block.timestamp);
     });
 
-    it('Cliff: M+1 => M+5', async () => {
-      for (let i = 1; i <= 5; i++) {
+    it('Cliff: M+1 => M+11', async () => {
+      for (let i = 1; i <= 11; i++) {
         const block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         assert.equal('0', balance.toString());
       }
     });
 
-    it('Periodic: M+6 => M+28', async () => {
-      for (let i = 6; i <= 28; i++) {
-        const _prevDstBalance = await dstInstance.balanceOf(privateSaleVester);
+    it('Periodic: M+12 => M+46', async () => {
+      for (let i = 12; i <= 46; i++) {
+        const _prevDstBalance = await dstInstance.balanceOf(teamVester);
         const prevDstBalance = BigNumber(_prevDstBalance.toString());
 
         let block = await util.advanceTimeAndBlock(monthInSeconds);
         const current = moment.unix(block.timestamp);
         const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
 
-        const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+        const balance = await vestingInstance.getClaimableBalance(teamVester);
 
         console.log(`M+${i}: +${diff} days, Released: ${balance.toString()}`);
         assert.equal(periodicRelease.toString(), balance.toString());
 
-        await vestingInstance.claim({ from: privateSaleVester });
-        const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-        const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-        const dstBalance = await dstInstance.balanceOf(privateSaleVester);
+        await vestingInstance.claim({ from: teamVester });
+        const vestingInfo = await vestingInstance.getVestingInfo(teamType);
+        const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(teamVester);
+        const dstBalance = await dstInstance.balanceOf(teamVester);
         claimed = claimed.plus(periodicRelease);
 
         block = await web3.eth.getBlock('latest');
@@ -385,19 +361,19 @@ contract('PrivateSaleVesting', async (accounts) => {
       }
     });
 
-    it('Last periodic: M+29', async () => {
+    it('Last periodic: M+47', async () => {
       let block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+29: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+47: +${diff} days, Released: ${balance.toString()}`);
       assert.equal(total.minus(claimed).toString(), balance.toString());
 
-      await vestingInstance.claim({ from: privateSaleVester });
-      const vestingInfo = await vestingInstance.getVestingInfo(privateSaleType);
-      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(privateSaleVester);
-      const dstBalance = await dstInstance.balanceOf(privateSaleVester);
+      await vestingInstance.claim({ from: teamVester });
+      const vestingInfo = await vestingInstance.getVestingInfo(teamType);
+      const vestingAccountInfo = await vestingInstance.getVestingAccountInfo(teamVester);
+      const dstBalance = await dstInstance.balanceOf(teamVester);
       claimed = claimed.plus(balance);
 
       block = await web3.eth.getBlock('latest');
@@ -407,18 +383,18 @@ contract('PrivateSaleVesting', async (accounts) => {
       assert.equal(vestingAccountInfo.lastClaimedTime, block.timestamp);
     });
 
-    it('After periodic: M+30', async () => {
+    it('After periodic: M+48', async () => {
       const block = await util.advanceTimeAndBlock(monthInSeconds);
       const current = moment.unix(block.timestamp);
       const diff = Math.floor(moment.duration(current.diff(started)).as('days'));
-      const balance = await vestingInstance.getClaimableBalance(privateSaleVester);
+      const balance = await vestingInstance.getClaimableBalance(teamVester);
 
-      console.log(`M+30: +${diff} days, Released: ${balance.toString()}`);
+      console.log(`M+48: +${diff} days, Released: ${balance.toString()}`);
       assert.equal('0', balance.toString());
 
       let error = false;
       try {
-        await vestingInstance.claim({ from: privateSaleVester });
+        await vestingInstance.claim({ from: teamVester });
       } catch (e) {
         error = true;
       }

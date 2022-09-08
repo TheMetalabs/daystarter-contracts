@@ -53,47 +53,59 @@ contract Vesting is Ownable {
     vestingInfos[uint8(VestingType.PRIVATE_SALE)] = VestingInfo({
       startTime: 0,
       vestingStartMonth: 6,
+      // 16.50% of total supply
       totalBalance: 165000000 * 10 ** 18,
       addedBalance: 0,
       claimedBalance: 0,
-      initialBp: 500, // 5%
-      periodBp: 400 // 4%
+      // 5% of total private sale vesting(0.825% of total supply)
+      initialBp: 500,
+      // 4% of total private vesting(0.66% of total supply)
+      periodBp: 400
     });
 
     vestingInfos[uint8(VestingType.TEAM)] = VestingInfo({
       startTime: 0,
       vestingStartMonth: 12,
+      // 8% of total supply
       totalBalance: 80000000 * 10 ** 18,
       addedBalance: 0,
       claimedBalance: 0,
-      initialBp: 0, // 0%
-      periodBp: 280 // 2.8%
+      // 0%
+      initialBp: 0,
+      // 2.8% of total team vesting(0.224% of total supply)
+      periodBp: 280
     });
 
     vestingInfos[uint8(VestingType.MARKETING)] = VestingInfo({
       startTime: 0,
       vestingStartMonth: 0,
+      // 5.5% of total supply
       totalBalance: 55000000 * 10 ** 18,
       addedBalance: 0,
       claimedBalance: 0,
-      initialBp: 1000, // 10%
-      periodBp: 1000 // 10%
+      // 10% of total marketing vesting(0.55% of total supply)
+      initialBp: 1000,
+      // 10% of total marketing vesting(0.55% of total supply)
+      periodBp: 1000
     });
 
     vestingInfos[uint8(VestingType.TREASURY)] = VestingInfo({
       startTime: 0,
       vestingStartMonth: 1,
+      // 29% of total supply
       totalBalance: 290000000 * 10 ** 18,
       addedBalance: 0,
       claimedBalance: 0,
-      initialBp: 285, // 2.85%
-      periodBp: 100 // 1%
+      // 10% of total treasury vesting(2.9% of total supply)
+      initialBp: 1000,
+      // 1% of total treasury vesting(0.29% of total supply)
+      periodBp: 100
     });
   }
 
   function setDSTAddress(address addr) public onlyOwner {
-    // Check addr is ERC20
-    IERC20(addr).balanceOf(msg.sender);
+    // Check address is ERC20
+    IERC20(addr).balanceOf(addr);
     dstAddress = addr;
   }
 
@@ -124,7 +136,8 @@ contract Vesting is Ownable {
     // Check admin's DST balance
     uint256 adminBalance = IERC20(dstAddress).balanceOf(msg.sender);
     uint256 allowance = IERC20(dstAddress).allowance(msg.sender, address(this));
-    require(allowance >= balance && balance > 0 && adminBalance >= balance, "not enough balance");
+    require(allowance >= balance, "need approve");
+    require(adminBalance >= balance, "not enough balance");
 
     // Check address's vesting info
     require(vestingAccountInfos[addr].createdTime == 0, "alreay added address");
@@ -188,39 +201,44 @@ contract Vesting is Ownable {
   function _getClaimableBalance(uint8 vestingType, uint256 totalBalance, uint256 claimedBalance, uint256 time) public view returns (uint256) {
     // Check vesting type
     require(vestingType >= uint8(VestingType.PRIVATE_SALE) && vestingType <= uint8(VestingType.TREASURY), "wrong vesting type");
-    if (vestingInfos[vestingType].startTime == 0 || time < vestingInfos[vestingType].startTime) {
+
+    VestingInfo memory vestingInfo = vestingInfos[vestingType];
+    if (vestingInfo.startTime == 0 || time < vestingInfo.startTime) {
       return 0;
     }
 
     uint256 balance = 0;
     if (vestingType == uint8(VestingType.MARKETING)) {
-      // Add initial released amount;
-      balance += totalBalance / 10000 * vestingInfos[vestingType].initialBp ;
+      // Add initial released amount
+      balance += totalBalance / 10000 * vestingInfo.initialBp;
 
       // Marketing vesting amount is released by 10% every 4 months.
-      uint256 monthDiff = (time - vestingInfos[vestingType].startTime) / 120 days; // 10368000 is 120 days in seconds
-      balance += totalBalance * vestingInfos[vestingType].periodBp * monthDiff;
+      uint256 monthDiff = (time - vestingInfo.startTime) / 120 days;
+      balance += totalBalance * vestingInfo.periodBp * monthDiff;
     } else {
-      // Add initial released amount;
-      balance += totalBalance / 10000 * vestingInfos[vestingType].initialBp;
-      uint256 vestingStartTime = vestingInfos[vestingType].startTime + vestingInfos[vestingType].vestingStartMonth * 30 days;
-      // // Vesting amount except markting is released by periodic bias percent every each month.
+      // Add initial released amount
+      balance += totalBalance / 10000 * vestingInfo.initialBp;
+
+      // Add periodic released amount
+      uint256 vestingStartTime = vestingInfo.startTime + uint256(vestingInfo.vestingStartMonth) * 30 days;
+      // Vesting amount except markting is released by periodic bias percent every each month.
       if (time > vestingStartTime) {
         uint monthDiff = (time - vestingStartTime) / 30 days + 1;
-        balance += totalBalance / 10000 * vestingInfos[vestingType].periodBp * monthDiff;
+        balance += totalBalance / 10000 * vestingInfo.periodBp * monthDiff;
       }
+    }
+
+    // Check claimed amount
+    if (claimedBalance >= balance) {
+      return 0;
     }
 
     // Subtract claimed amount
     balance -= claimedBalance;
 
-    if (balance < 0) {
-      return 0;
-    }
-
     // Check balance is over total balance
-    if (balance > totalBalance - claimedBalance) {
-      balance = totalBalance - claimedBalance;
+    if (balance + claimedBalance > totalBalance) {
+      return totalBalance - claimedBalance;
     }
 
     return balance;
