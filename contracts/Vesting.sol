@@ -209,12 +209,9 @@ contract Vesting is Ownable {
 
     uint256 balance = 0;
     if (vestingType == uint8(VestingType.MARKETING)) {
-      // Add initial released amount
-      balance += totalBalance / 10000 * vestingInfo.initialBp;
-
       // Marketing vesting amount is released by 10% every 4 months.
-      uint256 monthDiff = (time - vestingInfo.startTime) / 120 days;
-      balance += totalBalance * vestingInfo.periodBp * monthDiff;
+      uint256 monthDiff = (time - vestingInfo.startTime) / 120 days + 1;
+      balance += totalBalance / 10000 * vestingInfo.periodBp * monthDiff;
     } else {
       // Add initial released amount
       balance += totalBalance / 10000 * vestingInfo.initialBp;
