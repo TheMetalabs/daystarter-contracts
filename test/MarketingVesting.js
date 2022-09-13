@@ -190,7 +190,7 @@ contract('MarketingVesting', async (accounts) => {
 
   describe('Indivisual with claim', () => {
     const total = BigNumber('1000').times(decimal);
-    const periodicRelease = BigNumber(total).times(0.01);
+    const periodicRelease = BigNumber(total).times(0.1);
 
     let vestingInstance;
     let dstInstance;
