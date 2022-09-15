@@ -15,7 +15,9 @@
   },
   "devDependencies": {
     "@remix-project/remixd": "^0.6.5",
+    "bignumber.js": "^9.1.0",
     "hardhat": "^2.10.2",
+    "moment": "^2.29.4",
     "solhint": "^3.3.7",
     "truffle": "^5.5.27"
   }
