@@ -1,148 +1,136 @@
 // SPDX-License-Identifier: GPL-3.0-or-later
 
-pragma solidity ^0.8.2;
+pragma solidity ^0.8.2.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract PreSale is Ownable {
-  event SaleEvent(address addr, uint256 balance, uint256 remainBalance);
-  
-    
+  event SwapEvent(address addr, uint256 amount);
 
-  // DST ERC20 token address
-  address dstAddress;
-  // foundation Address
-  address foundAddress;
+  address public DSTAddress; // DST ERC20 token address
+  address public foundationWallet; // Foundation wallet address
 
-  // PreSaleInfo
-  struct PreSaleInfo {
-    // first preSale block number
-    uint256 preSale1Height;
-    // second preSale block number
-    uint256 preSale2Height;
-    // publicSale block number
-    uint256 publicSaleHeight;
-    // sale price
-    uint256 salePrice;
-  }
+  uint256 public preSale1Height; // First presale block number
+  uint256 public preSale2Height; // Second presale block number
+  uint256 public publicSaleHeight; // Public sale block number
+  uint256 public price; // Sale price
 
-  // Pre-sale Account
+  // Presale Account
   struct PreSaleAccount {
-    // total able claim balance
-    uint256 totalClaimBalance;
-    // claimed balance
-    uint256 claimedBalance;
-    // exist check
+    uint256 totalClaimBalance; // Total able claim balance
+    uint256 claimedBalance; // Claimed balance
     bool isExist;
   }
 
-  mapping(uint8 => PreSaleInfo) public preSaleInfo;
   mapping(address => PreSaleAccount) public preSaleAccounts;
 
-  // [관리자] 프리세일 일정 정보 입력(판매가격, 1차 프리세일 시작 시점, 2차 프리세일 시작 시점, 퍼블릭 세일 시작 시점)
-  function setPresaleInfo(uint256 _salePrice, uint256 _preSale1Height, uint256 _preSale2Height, uint256 _publicSaleHeight ) public onlyOwner {
-    require(_preSale2Height > _preSale1Height, "presale2 more than presale1");
-    require(_publicSaleHeight > _preSale2Height, "publicSale more than presale2");
-    preSaleInfo[0] = PreSaleInfo({
-      salePrice: _salePrice,
-      preSale1Height: _preSale1Height,
-      preSale2Height: _preSale2Height,
-      publicSaleHeight: _publicSaleHeight
-    });
+  // [Owner] Enter presale information
+  function setPreSaleInfo(uint256 _price, uint256 _preSale1Height, uint256 _preSale2Height, uint256 _publicSaleHeight) public onlyOwner {
+    require(_price > 0, "price must be greater than zero");
+    require(_preSale2Height > _preSale1Height, "Presale 2 cannot be faster than Presale 1");
+    require(_publicSaleHeight > _preSale2Height, "Public sale cannot be faster than Presale 1");
 
+    price = _price;
+    preSale1Height = _preSale1Height;
+    preSale2Height = _preSale2Height;
+    publicSaleHeight = _publicSaleHeight;
   }
 
-
-  // [관리자] 재단 지갑 입력
-  function setFoundAddress(address _addr) public onlyOwner {
-    // Check address is ERC20
-    foundAddress = _addr;
+  // [Owner] Enter foundation wallet address
+  function setFoundationWalletAddress(address _addr) public onlyOwner {
+    foundationWallet = _addr;
   }
 
-  // [관리자] 코인 컨트랙트 입력
+  // [Owner] Enter DST(ERC-20) contract address
   function setDSTAddress(address _addr) public onlyOwner {
-    // Check address is ERC20
     IERC20(_addr).balanceOf(_addr);
-    dstAddress = _addr;
+    DSTAddress = _addr;
   }
 
-  // AddPresale Accounts
-  // Params: addressList:["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"],  balanceList:[123]
-  // [관리자] 프리세일 스냅샷을 기반으로하는 클레임 정보 입력(주소, DST 클레임 가능한 양)
-  function addPresaleAccounts(address[] memory _addressList, uint256[] memory _balanceList) public onlyOwner {
+  // [Owner] Add presale accounts
+  // Params: addressList:["0x5B38Da6a701c568545dCfcB03FcB875f56beddC4"], balanceList:[123]
+  function addPreSaleAccounts(address[] memory _addressList, uint256[] memory _balanceList) public onlyOwner {
     require(_addressList.length == _balanceList.length, "need same length");
-    for (uint i=0; i<_addressList.length; i++) {
+    for (uint i = 0; i < _addressList.length; i++) {
       if(!preSaleAccounts[_addressList[i]].isExist) {
         preSaleAccounts[_addressList[i]] = PreSaleAccount({
           totalClaimBalance: _balanceList[i],
-          claimedBalance: 0,
+          claimedBalance : 0,
           isExist: true
         });
       }
     }
-  }  
+  }
 
+  // [Owner] Set presale account
+  function setPreSaleAccount(address _address, uint256 _balance, bool _isExist) public onlyOwner {
+    PreSaleAccount storage account = preSaleAccounts[_address];
+    require(account.isExist, "not registered");
+    account.totalClaimBalance = _balance;
+    account.isExist = _isExist;
+  }
 
-
-  // [관리자] 컨트랙트 ETH 잔액 조회
-  function getEthBalance( ) public view returns(uint256){
+  // [Onwer] Check the ETH balance
+  function getEthBalance() public view returns(uint256){
     return address(this).balance;
   }
 
-  // [관리자] 컨트랙트 DST 잔액 조회
-  function getDstBalance() public view returns(uint256){
-    return IERC20(dstAddress).balanceOf(address(this));
+  // [Owner] Check the DST balance
+  function getDSTBalance() public view returns(uint256){
+    return IERC20(DSTAddress).balanceOf(address(this));
   }
 
-
-
-// [관리자] 재단 지갑으로 ETH 출금
-  function withdrawETH( ) public onlyOwner {
-    require(foundAddress != address(0), "no foundation address");
-    // Transfer Eth to Foundation address
-    payable(foundAddress).transfer(address(this).balance);
+  // [Owner] Withdraw ETH
+  function withdrawETH() public onlyOwner {
+    require(foundationWallet != address(0), "no foundation address");
+    payable(foundationWallet).transfer(address(this).balance);
   }
 
-  // [관리자] 재단 지갑으로 DST 출금
-  function withdrawDST( ) public onlyOwner {
-    require(foundAddress != address(0), "no foundation address");
-    // Transfer DST: Contract -> Foundation address
-    IERC20(dstAddress).transfer(foundAddress, IERC20(dstAddress).balanceOf(address(this)));
+  // [Owner] Withdraw DST
+  function withdrawDST() public onlyOwner {
+    require(foundationWallet != address(0), "no foundation address");
+    IERC20(DSTAddress).transfer(foundationWallet, IERC20(DSTAddress).balanceOf(address(this)));
   }
 
-
-
-// [유저] ETH로 DST 구매
-  function sale( ) public payable{
-    uint price = msg.value;
-    PreSaleInfo memory saleInfo = preSaleInfo[0];
-
-    require(saleInfo.salePrice > 0, "sale price more than zero");
-    require(price > 0, "price more than zero");
-    require(price % saleInfo.salePrice == 0, "price error");
+  // [User] Swap ETH to DST
+  function swap() public payable {
+    require(price > 0, "price must be greater than zero");
+    require(msg.value > 0, "value must be greater than zero");
+    require(msg.value % price == 0, "price error");
 
     uint blockNumber = block.number;
-    uint256 amount = price / saleInfo.salePrice;
-    if(blockNumber >= saleInfo.preSale1Height && blockNumber < saleInfo.preSale2Height )     {
-      // 1차 판매중
+    uint256 amount = msg.value / price;
+
+    if(blockNumber >= preSale1Height && blockNumber < preSale2Height) { // Presale 1
       PreSaleAccount storage account = preSaleAccounts[msg.sender];
-      require(account.totalClaimBalance - account.claimedBalance > amount, "Not enough quantity available to sale");
-      IERC20(dstAddress).transfer(msg.sender, amount);
+      require(account.totalClaimBalance - account.claimedBalance >= amount, "Not enough quantity available to sale");
+      require(IERC20(DSTAddress).balanceOf(address(this)) >= amount, "Insufficient quantity");
+
+      IERC20(DSTAddress).transfer(msg.sender, amount);
       account.claimedBalance += amount;
-    } else if(blockNumber >= saleInfo.preSale2Height && blockNumber < saleInfo.publicSaleHeight )     {
-      // 2차판매
-      require(preSaleAccounts[msg.sender].isExist, "Not exist whitelist");
-      uint balance = IERC20(dstAddress).balanceOf(address(this));
-      require(balance > amount, "Insufficient quantity.");
-      IERC20(dstAddress).transfer(msg.sender, amount);
-    } else if(blockNumber >= saleInfo.publicSaleHeight) {
-      // 퍼블릭세일
-      revert("not saled");
+
+      emit SwapEvent(msg.sender, amount);
+    } else if(blockNumber >= preSale2Height && blockNumber < publicSaleHeight) { // Presale 2
+      PreSaleAccount storage account = preSaleAccounts[msg.sender];
+      require(account.isExist, "Not whitelisted");
+      require(IERC20(DSTAddress).balanceOf(address(this)) >= amount, "Insufficient quantity");
+      
+      IERC20(DSTAddress).transfer(msg.sender, amount);
+      account.claimedBalance += amount;
+
+      emit SwapEvent(msg.sender, amount);
+    } else if(blockNumber >= publicSaleHeight) { // Public Sale
+      require(IERC20(DSTAddress).balanceOf(address(this)) >= amount, "Insufficient quantity");
+      
+      IERC20(DSTAddress).transfer(msg.sender, amount);
+
+      emit SwapEvent(msg.sender, amount);
     } else {
-      revert("not saled");
+      revert("can't swap");
     }
   }
 
+  receive() external payable {
+  }
 }
-

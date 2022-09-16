@@ -1,5 +1,8 @@
+.DS_Store
 .deps
 node_modules
 contracts/artifacts
 build
 contracts/interfaces/artifacts/build-info
+.vscode
+.vscode/settings.json

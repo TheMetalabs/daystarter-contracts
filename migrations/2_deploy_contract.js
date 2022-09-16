@@ -8,8 +8,9 @@ const Benefit = artifacts.require("Benefit");
 const BenefitTreasury = artifacts.require("BenefitTreasury");
 const Achievement = artifacts.require("Achievement");
 const Vesting = artifacts.require("Vesting");
+const PreSale = artifacts.require("PreSale");
 
-module.exports = function (deployer) {
+module.exports = function(deployer) {
   deployer.deploy(DSP);
   deployer.deploy(DST);
   deployer.deploy(DSPTreasury);
@@ -20,4 +21,5 @@ module.exports = function (deployer) {
   deployer.deploy(Achievement);
   deployer.deploy(BenefitTreasury);
   deployer.deploy(Vesting);
+  deployer.deploy(PreSale);
 };
