@@ -25,13 +25,13 @@ contract('DSTTreasury', async (accounts) => {
     assert.equal(
       balance.valueOf(),
       1000000000 * 10 ** 18,
-      "1,000,000,000 wasn't in the first account"
+      '1,000,000,000 wasn\'t in the first account'
     );
   });
 
   it('0 DST in treasury', async () => {
     const balance = await dstInstance.balanceOf(dstTreasuryInstance.address);
-    assert.equal(balance.valueOf(), 0, "0 wasn't in the treasury");
+    assert.equal(balance.valueOf(), 0, '0 wasn\'t in the treasury');
   });
 
   describe('deposit', () => {

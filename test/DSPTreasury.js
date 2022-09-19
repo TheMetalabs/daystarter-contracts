@@ -18,12 +18,12 @@ contract('DSPTreasury', async (accounts) => {
 
   it('should put 0 DSP in the first account', async () => {
     const balance = await dspInstance.balanceOf(minter);
-    assert.equal(balance.valueOf(), 0, "0 wasn't in the first account");
+    assert.equal(balance.valueOf(), 0, '0 wasn\'t in the first account');
   });
 
   it('0 DSP in treasury', async () => {
     const balance = await dspInstance.balanceOf(dspTreasuryInstance.address);
-    assert.equal(balance.valueOf(), 0, "0 wasn't in the treasury");
+    assert.equal(balance.valueOf(), 0, '0 wasn\'t in the treasury');
   });
 
   describe('deposit', () => {

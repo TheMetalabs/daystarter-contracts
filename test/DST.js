@@ -8,7 +8,7 @@ contract('DST', async (accounts) => {
     assert.equal(
       balance.valueOf(),
       1000000000 * 10 ** 18,
-      "1,000,000,000 wasn't in the first account"
+      '1,000,000,000 wasn\'t in the first account'
     );
   });
 });

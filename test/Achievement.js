@@ -111,7 +111,7 @@ contract('Achievement', async (accounts) => {
       try {
         await achievementInstance.transferFrom(nftOwner, receiver, nftId, { from: nftOwner });
       } catch (e) {
-        error = true
+        error = true;
       }
       assert.equal(error, true);
     });
@@ -124,7 +124,7 @@ contract('Achievement', async (accounts) => {
       try {
         await achievementInstance.transferFrom(nftOwner, receiver, nftId, { from: owner });
       } catch (e) {
-        error = true
+        error = true;
       }
       assert.equal(error, true);
     });
@@ -137,7 +137,7 @@ contract('Achievement', async (accounts) => {
       try {
         await achievementInstance.transferFrom(nftOwner, receiver, nftId, { from: minter });
       } catch (e) {
-        error = true
+        error = true;
       }
       assert.equal(error, true);
     });
