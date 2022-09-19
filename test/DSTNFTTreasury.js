@@ -1,12 +1,12 @@
-const BenefitTreasury = artifacts.require("BenefitTreasury");
-const Benefit = artifacts.require("Benefit");
-const DST = artifacts.require("DST");
+const BenefitTreasury = artifacts.require('BenefitTreasury');
+const Benefit = artifacts.require('Benefit');
+const DST = artifacts.require('DST');
 
-contract("BenefitTreasury", async (accounts) => {
+contract('BenefitTreasury', async (accounts) => {
   let benefitTreasuryInstance;
   let nftId = 0;
 
-  const minterRole = web3.utils.keccak256("MINTER_ROLE");
+  const minterRole = web3.utils.keccak256('MINTER_ROLE');
   const owner = accounts[0];
   const minter = accounts[1];
   const nftOwner = accounts[2];
@@ -17,12 +17,12 @@ contract("BenefitTreasury", async (accounts) => {
     dstInstance = await DST.deployed();
   });
 
-  describe("setAddress", () => {
+  describe('setAddress', () => {
     before(async () => {
       await benefitTreasuryInstance.grantRole(minterRole, minter, { from: owner });
     });
 
-    it("is not allowed for non minters", async () => {
+    it('is not allowed for non minters', async () => {
       error = false;
       try {
         await benefitTreasuryInstance.setAddress(benefitInstance.address, { from: nftOwner });
@@ -32,7 +32,7 @@ contract("BenefitTreasury", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for minter", async () => {
+    it('is allowed for minter', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.setAddress(benefitInstance.address, { from: minter });
@@ -42,7 +42,7 @@ contract("BenefitTreasury", async (accounts) => {
       assert.equal(error, false);
     });
 
-    it("is only allowed for ERC721", async () => {
+    it('is only allowed for ERC721', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.setAddress(dstInstance.address, { from: minter });
@@ -61,7 +61,7 @@ contract("BenefitTreasury", async (accounts) => {
     });
   });
 
-  describe("deposit", () => {
+  describe('deposit', () => {
     let _nftIdA;
     let _nftIdB;
 
@@ -70,16 +70,16 @@ contract("BenefitTreasury", async (accounts) => {
       await benefitTreasuryInstance.setAddress(benefitInstance.address);
       await benefitInstance.grantRole(minterRole, minter, { from: owner });
 
-      await benefitInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+      await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdA = nftId;
       nftId++;
 
-      await benefitInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+      await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdB = nftId;
       nftId++;
     });
 
-    it("is not allowed for non nft owner", async () => {
+    it('is not allowed for non nft owner', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.deposit(_nftIdA, { from: owner });
@@ -97,13 +97,12 @@ contract("BenefitTreasury", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for nft owner", async () => {
+    it('is allowed for nft owner', async () => {
       let error = false;
 
       try {
         await benefitInstance.approve(benefitTreasuryInstance.address, _nftIdA, { from: nftOwner });
         await benefitTreasuryInstance.deposit(_nftIdA, { from: nftOwner });
-
       } catch (e) {
         error = true;
       }
@@ -114,7 +113,7 @@ contract("BenefitTreasury", async (accounts) => {
     });
   });
 
-  describe("withdraw", () => {
+  describe('withdraw', () => {
     let _nftIdA;
     let _nftIdB;
 
@@ -123,11 +122,11 @@ contract("BenefitTreasury", async (accounts) => {
       await benefitTreasuryInstance.setAddress(benefitInstance.address);
       await benefitInstance.grantRole(minterRole, minter, { from: owner });
 
-      await benefitInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+      await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdA = nftId;
       nftId++;
 
-      await benefitInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+      await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdB = nftId;
       nftId++;
 
@@ -135,7 +134,7 @@ contract("BenefitTreasury", async (accounts) => {
       await benefitTreasuryInstance.deposit(_nftIdA, { from: nftOwner });
     });
 
-    it("is not allowed for non minter", async () => {
+    it('is not allowed for non minter', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.withdraw(nftOwner, _nftIdA, { from: nftOwner });
@@ -145,7 +144,7 @@ contract("BenefitTreasury", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for minter", async () => {
+    it('is allowed for minter', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.withdraw(nftOwner, _nftIdA, { from: minter });
@@ -158,7 +157,7 @@ contract("BenefitTreasury", async (accounts) => {
       assert.equal(_nftOwnerAddress, nftOwner);
     });
 
-    it("is allowed for nft which contract has", async () => {
+    it('is allowed for nft which contract has', async () => {
       let error = false;
       try {
         await benefitTreasuryInstance.withdraw(nftOwner, _nftIdB, { from: minter });

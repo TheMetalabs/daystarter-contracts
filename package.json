@@ -16,6 +16,11 @@
   "devDependencies": {
     "@remix-project/remixd": "^0.6.5",
     "bignumber.js": "^9.1.0",
+    "eslint": "^8.0.1",
+    "eslint-config-standard": "^17.0.0",
+    "eslint-plugin-import": "^2.25.2",
+    "eslint-plugin-n": "^15.0.0",
+    "eslint-plugin-promise": "^6.0.0",
     "hardhat": "^2.10.2",
     "moment": "^2.29.4",
     "solhint": "^3.3.7",

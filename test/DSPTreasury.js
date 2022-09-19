@@ -1,7 +1,7 @@
-const DSP = artifacts.require("DSP");
-const DSPTreasury = artifacts.require("DSPTreasury");
+const DSP = artifacts.require('DSP');
+const DSPTreasury = artifacts.require('DSPTreasury');
 
-contract("DSPTreasury", async (accounts) => {
+contract('DSPTreasury', async (accounts) => {
   let dspTreasuryInstance;
   let dspInstance;
   const minter = accounts[0];
@@ -12,26 +12,26 @@ contract("DSPTreasury", async (accounts) => {
     dspTreasuryInstance = await DSPTreasury.deployed();
     dspInstance = await DSP.deployed();
     await dspTreasuryInstance.setTokenAddress(dspInstance.address, {
-      from: minter,
+      from: minter
     });
   });
 
-  it("should put 0 DSP in the first account", async () => {
+  it('should put 0 DSP in the first account', async () => {
     const balance = await dspInstance.balanceOf(minter);
     assert.equal(balance.valueOf(), 0, "0 wasn't in the first account");
   });
 
-  it("0 DSP in treasury", async () => {
+  it('0 DSP in treasury', async () => {
     const balance = await dspInstance.balanceOf(dspTreasuryInstance.address);
     assert.equal(balance.valueOf(), 0, "0 wasn't in the treasury");
   });
 
-  describe("deposit", () => {
+  describe('deposit', () => {
     before(async () => {
       await dspInstance.mint(dspHolder, 200, { from: minter });
     });
 
-    it("is not allowed for non holder", async () => {
+    it('is not allowed for non holder', async () => {
       let error = false;
       try {
         await dspTreasuryInstance.deposit(10, { from: minter });
@@ -41,7 +41,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for holder", async () => {
+    it('is allowed for holder', async () => {
       let error = false;
       const amount = 10;
       try {
@@ -54,7 +54,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(error, false);
     });
 
-    it("increase treasury balance", async () => {
+    it('increase treasury balance', async () => {
       const amount = 20;
       const prevBalance = await dspInstance.balanceOf(dspTreasuryInstance.address);
 
@@ -65,7 +65,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(balance.toNumber(0), prevBalance.toNumber() + amount);
     });
 
-    it("decrease user balance", async () => {
+    it('decrease user balance', async () => {
       const amount = 20;
       const prevBalance = await dspInstance.balanceOf.call(dspHolder);
 
@@ -76,7 +76,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(balance.toNumber(), prevBalance.toNumber() - amount);
     });
 
-    it("fail when deposit amount is greater then user balance", async () => {
+    it('fail when deposit amount is greater then user balance', async () => {
       const prevBalance = await dspInstance.balanceOf(dspHolder);
       const amount = prevBalance.toNumber() + 1;
       let error = false;
@@ -90,12 +90,12 @@ contract("DSPTreasury", async (accounts) => {
     });
   });
 
-  describe("withdraw", () => {
+  describe('withdraw', () => {
     before(async () => {
       await dspInstance.mint(dspTreasuryInstance.address, 200, { from: minter });
     });
 
-    it("is not allowed for non holder", async () => {
+    it('is not allowed for non holder', async () => {
       let error = false;
       try {
         await dspTreasuryInstance.withdraw(dspReceiver, 10, { from: dspReceiver });
@@ -105,7 +105,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for minter", async () => {
+    it('is allowed for minter', async () => {
       let error = false;
       try {
         await dspTreasuryInstance.withdraw(dspReceiver, 10, { from: minter });
@@ -115,7 +115,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(error, false);
     });
 
-    it("decrease treasury balance", async () => {
+    it('decrease treasury balance', async () => {
       const amount = 20;
       const prevBalance = await dspInstance.balanceOf.call(dspTreasuryInstance.address);
 
@@ -125,7 +125,7 @@ contract("DSPTreasury", async (accounts) => {
       assert.equal(balance.toNumber(), prevBalance.toNumber() - amount);
     });
 
-    it("increase user balance", async () => {
+    it('increase user balance', async () => {
       const amount = 20;
       const prevBalance = await dspInstance.balanceOf.call(dspReceiver);
 

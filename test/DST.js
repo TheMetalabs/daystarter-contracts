@@ -1,7 +1,7 @@
-const DST = artifacts.require("DST");
+const DST = artifacts.require('DST');
 
-contract("DST", async (accounts) => {
-  it("should put 1,000,000,000 DST in the first account", async () => {
+contract('DST', async (accounts) => {
+  it('should put 1,000,000,000 DST in the first account', async () => {
     const DSTInstance = await DST.deployed();
     const balance = await DSTInstance.balanceOf.call(accounts[0]);
 

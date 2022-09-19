@@ -1,11 +1,11 @@
-const Achievement = artifacts.require("Achievement");
+const Achievement = artifacts.require('Achievement');
 
-contract("Achievement", async (accounts) => {
+contract('Achievement', async (accounts) => {
   let achievementInstance;
   let block;
   let nftId = 0;
 
-  const minterRole = web3.utils.keccak256("MINTER_ROLE");
+  const minterRole = web3.utils.keccak256('MINTER_ROLE');
   const owner = accounts[0];
   const minter = accounts[1];
   const noPermissioner = accounts[3];
@@ -14,15 +14,15 @@ contract("Achievement", async (accounts) => {
 
   before(async () => {
     achievementInstance = await Achievement.deployed();
-    block = await web3.eth.getBlock("latest");
+    block = await web3.eth.getBlock('latest');
     await achievementInstance.grantRole(minterRole, minter, { from: owner });
   });
 
-  describe("mint", () => {
-    it("is not allowed for non-minters", async () => {
+  describe('mint', () => {
+    it('is not allowed for non-minters', async () => {
       error = false;
       try {
-        await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: noPermissioner });
+        await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: noPermissioner });
         nftId++;
       } catch (e) {
         error = true;
@@ -31,7 +31,7 @@ contract("Achievement", async (accounts) => {
 
       error = false;
       try {
-        await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: nftOwner });
+        await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: nftOwner });
         nftId++;
       } catch (e) {
         error = true;
@@ -39,11 +39,11 @@ contract("Achievement", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("is allowed for minter", async () => {
+    it('is allowed for minter', async () => {
       let error = false;
       const _nftId = nftId;
       try {
-        await achievementInstance.mint(nftOwner, _nftId, Buffer.from(""), { from: minter });
+        await achievementInstance.mint(nftOwner, _nftId, Buffer.from(''), { from: minter });
         nftId++;
       } catch (e) {
         error = true;
@@ -55,21 +55,21 @@ contract("Achievement", async (accounts) => {
     });
   });
 
-  describe("setURI", () => {
-    it("is not allowed for non-minter", async () => {
+  describe('setURI', () => {
+    it('is not allowed for non-minter', async () => {
       let error = false;
       try {
-        await achievementInstance.setURI("https://opensea.io", { from: noPermissioner });
+        await achievementInstance.setURI('https://opensea.io', { from: noPermissioner });
       } catch (e) {
         error = true;
       }
       assert.equal(error, true);
     });
 
-    it("is allowed for minter", async () => {
+    it('is allowed for minter', async () => {
       let error = false;
       try {
-        await achievementInstance.setURI("https://opensea.io", { from: minter });
+        await achievementInstance.setURI('https://opensea.io', { from: minter });
       } catch (e) {
         error = true;
       }
@@ -77,34 +77,34 @@ contract("Achievement", async (accounts) => {
     });
   });
 
-  describe("tokenURI", () => {
+  describe('tokenURI', () => {
     let _nftId;
 
     before(async () => {
-      await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+      await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftId = nftId;
       nftId++;
     });
 
     beforeEach(async () => {
-      await achievementInstance.setURI("", { from: minter });
+      await achievementInstance.setURI('', { from: minter });
     });
 
-    it("return empty string when no URI is setted", async () => {
+    it('return empty string when no URI is setted', async () => {
       const tokenURI = await achievementInstance.tokenURI(_nftId, { from: noPermissioner });
-      assert.equal(tokenURI, "");
+      assert.equal(tokenURI, '');
     });
 
-    it("return URL with json extension when URI is setted", async () => {
-      await achievementInstance.setURI("https://opensea.io", { from: minter });
+    it('return URL with json extension when URI is setted', async () => {
+      await achievementInstance.setURI('https://opensea.io', { from: minter });
       const tokenURI = await achievementInstance.tokenURI(_nftId, { from: noPermissioner });
       assert.equal(tokenURI, `https://opensea.io/${_nftId}.json`);
     });
   });
 
-  describe("transfer", () => {
-    it("raise error when nft ower is trying to transfer", async () => {
-      await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+  describe('transfer', () => {
+    it('raise error when nft ower is trying to transfer', async () => {
+      await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       nftId++;
 
       let error = false;
@@ -116,8 +116,8 @@ contract("Achievement", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("raise error when admin is trying to transfer", async () => {
-      await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+    it('raise error when admin is trying to transfer', async () => {
+      await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       nftId++;
 
       let error = false;
@@ -129,8 +129,8 @@ contract("Achievement", async (accounts) => {
       assert.equal(error, true);
     });
 
-    it("raise error when minter is trying to transfer", async () => {
-      await achievementInstance.mint(nftOwner, nftId, Buffer.from(""), { from: minter });
+    it('raise error when minter is trying to transfer', async () => {
+      await achievementInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       nftId++;
 
       let error = false;
