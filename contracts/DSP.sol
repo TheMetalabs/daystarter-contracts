@@ -5,5 +5,5 @@ pragma solidity ^0.8.2;
 import "./interfaces/DSToken.sol";
 
 contract DSP is DSToken {
-    constructor() DSToken("DAY STARTER Point", "DSP") {}
+    constructor() DSToken("DAYSTARTER Point", "DSP") {}
 }

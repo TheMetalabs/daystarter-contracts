@@ -5,7 +5,7 @@ pragma solidity ^0.8.2;
 import "./interfaces/DSToken.sol";
 
 contract DST is DSToken {
-    constructor() DSToken("DAY STARTER Token", "DST") {
+    constructor() DSToken("DAYSTARTER Token", "DST") {
         _mint(msg.sender, 1000000000 * 10 ** decimals());
     }
 

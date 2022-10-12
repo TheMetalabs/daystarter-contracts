@@ -24,6 +24,7 @@
     "hardhat": "^2.10.2",
     "moment": "^2.29.4",
     "solhint": "^3.3.7",
-    "truffle": "^5.5.27"
+    "truffle": "^5.5.27",
+    "truffle-plugin-verify": "^0.5.31"
   }
 }
