@@ -14,9 +14,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
     - mint new NFT
     - set NFT metadata URI
 
-  Burner can
-    - burn Membership and Benefit but can't burn Achievement
-
   NFT owners can
     - burn owned NFTs
     - transfer Membership and Benefit but can't transfer Achievement
@@ -28,8 +25,6 @@ import "@openzeppelin/contracts/utils/Strings.sol";
 abstract contract DS721 is ERC721, AccessControl {
   // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
-  // 0x3c11d16cbaffd01df69ce1c404f6340ee057498f5f00246190ea54220576a848
-  bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
   // URI for metadata
   string private _uri = "";
@@ -37,7 +32,6 @@ abstract contract DS721 is ERC721, AccessControl {
   bool private _transferable = true;
 
   constructor(string memory name_, string memory symbol_, bool transferable_) ERC721(name_, symbol_) {
-    _setupRole(DEFAULT_ADMIN_ROLE, msg.sender);
     _setupRole(MINTER_ROLE, msg.sender);
     _transferable = transferable_;
   }
@@ -68,7 +62,7 @@ abstract contract DS721 is ERC721, AccessControl {
   function burn(
     uint256 tokenId
   ) public virtual {
-    require(ownerOf(tokenId) == msg.sender || hasRole(BURNER_ROLE, msg.sender), "No permission to burn");
+    require(ownerOf(tokenId) == msg.sender, "No permission to burn");
     _burn(tokenId);
   }
 
