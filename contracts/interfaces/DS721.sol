@@ -23,6 +23,8 @@ import "@openzeppelin/contracts/utils/Strings.sol";
     Membership and Benefit are trasferable but Achievement is not transferable.
 */
 abstract contract DS721 is ERC721, AccessControl {
+  event URIChangeEvent(string uri);
+
   // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
   bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
@@ -44,6 +46,7 @@ abstract contract DS721 is ERC721, AccessControl {
 
   function setURI(string memory newuri) public onlyRole(MINTER_ROLE) {
     _uri = newuri;
+    emit URIChangeEvent(newuri);
   }
 
   function tokenURI(uint256 tokenId) public view override returns (string memory) {

@@ -22,6 +22,7 @@ import "@openzeppelin/contracts/access/AccessControl.sol";
 abstract contract DSTokenTreasury is AccessControl {
     event DepositEvent(address sender, uint256 balance, string symbol);
     event WithdrawEvent(address receiver, uint256 balance, string symbol);
+    event AddressChangeEvent(address addr);
 
     // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -41,7 +42,9 @@ abstract contract DSTokenTreasury is AccessControl {
     }
 
     function setTokenAddress(address addr) public onlyRole(MINTER_ROLE) {
+        require(addr != address(0), "wrong address");
         tokenAddr = addr;
+        emit AddressChangeEvent(addr);
     }
 
     function deposit(uint256 balance_) public {

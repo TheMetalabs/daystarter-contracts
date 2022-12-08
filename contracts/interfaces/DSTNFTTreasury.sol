@@ -24,6 +24,7 @@ import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 abstract contract DSTNFTTreasury is AccessControl {
     event DepositEvent(address nftAddr, uint256 nftId);
     event WithdrawEvent(address nftAddr, uint256 nftId);
+    event AddressChangeEvent(address addr);
 
     // 0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
@@ -45,6 +46,7 @@ abstract contract DSTNFTTreasury is AccessControl {
     function setAddress(address addr) public onlyRole(MINTER_ROLE) {
         require(IERC721(addr).supportsInterface(0x80ac58cd), "Only ERC721 is supported");
         nftAddr = addr;
+        emit AddressChangeEvent(addr);
     }
 
     function deposit(uint256 nftId) public {
