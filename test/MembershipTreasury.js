@@ -8,7 +8,7 @@ contract('MembershipTreasury', async (accounts) => {
 
   const minterRole = web3.utils.keccak256('MINTER_ROLE');
   const owner = accounts[0];
-  const minter = accounts[1];
+  const minter = accounts[0];
   const nftOwner = accounts[2];
 
   before(async () => {
@@ -66,9 +66,7 @@ contract('MembershipTreasury', async (accounts) => {
     let _nftIdB;
 
     before(async () => {
-      await benefitTreasuryInstance.grantRole(minterRole, minter, { from: owner });
       await benefitTreasuryInstance.setAddress(benefitInstance.address);
-      await benefitInstance.grantRole(minterRole, minter, { from: owner });
 
       await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdA = nftId;
@@ -118,9 +116,7 @@ contract('MembershipTreasury', async (accounts) => {
     let _nftIdB;
 
     before(async () => {
-      await benefitTreasuryInstance.grantRole(minterRole, minter, { from: owner });
       await benefitTreasuryInstance.setAddress(benefitInstance.address);
-      await benefitInstance.grantRole(minterRole, minter, { from: owner });
 
       await benefitInstance.mint(nftOwner, nftId, Buffer.from(''), { from: minter });
       _nftIdA = nftId;

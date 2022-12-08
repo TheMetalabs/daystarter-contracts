@@ -5,9 +5,8 @@ contract('Achievement', async (accounts) => {
   let block;
   let nftId = 0;
 
-  const minterRole = web3.utils.keccak256('MINTER_ROLE');
   const owner = accounts[0];
-  const minter = accounts[1];
+  const minter = accounts[0];
   const noPermissioner = accounts[3];
   const nftOwner = accounts[4];
   const receiver = accounts[5];
@@ -15,7 +14,6 @@ contract('Achievement', async (accounts) => {
   before(async () => {
     achievementInstance = await Achievement.deployed();
     block = await web3.eth.getBlock('latest');
-    await achievementInstance.grantRole(minterRole, minter, { from: owner });
   });
 
   describe('mint', () => {

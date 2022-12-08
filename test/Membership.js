@@ -4,32 +4,19 @@ contract('Membership', async (accounts) => {
   let membershipInstance;
   let block;
 
-  const minterRole = web3.utils.keccak256('MINTER_ROLE');
-  const bunnerRole = web3.utils.keccak256('BURNER_ROLE');
   const owner = accounts[0];
-  const minter = accounts[1];
-  const burner = accounts[2];
+  const minter = accounts[0];
   const noPermissioner = accounts[3];
 
   before(async () => {
     membershipInstance = await Membership.deployed();
     block = await web3.eth.getBlock('latest');
-    await membershipInstance.grantRole(minterRole, minter, { from: owner });
-    await membershipInstance.grantRole(bunnerRole, burner, { from: owner });
   });
 
   describe('mint', () => {
     it('is not allowed for nont minters', async () => {
       const id = 0;
       let error = false;
-      try {
-        await membershipInstance.mint(owner, id, Buffer.from(''), { from: burner });
-      } catch (e) {
-        error = true;
-      }
-      assert.equal(error, true);
-
-      error = false;
       try {
         await membershipInstance.mint(owner, id, Buffer.from(''), { from: noPermissioner });
       } catch (e) {
@@ -56,14 +43,6 @@ contract('Membership', async (accounts) => {
   describe('setURI', () => {
     it('is not allowed for non-minter', async () => {
       let error = false;
-      try {
-        await membershipInstance.setURI('https://opensea.io', { from: burner });
-      } catch (e) {
-        error = true;
-      }
-      assert.equal(error, true);
-
-      error = false;
       try {
         await membershipInstance.setURI('https://opensea.io', { from: noPermissioner });
       } catch (e) {
